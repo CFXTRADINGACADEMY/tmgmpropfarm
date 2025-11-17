@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMGM PropFarm Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1a2b3c;
+            --secondary: #4a9eff;
+            --accent: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f5f7fa;
+            --dark: #0d1722;
+            --gray: #5a6c7d;
+            --card-bg: #ffffff;
+            --sidebar-width: 250px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: #333;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #2a3b4c;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .menu li:hover {
+            background-color: #2a3b4c;
+            border-left: 3px solid var(--secondary);
+        }
+
+        .menu li.active {
+            background-color: #2a3b4c;
+            border-left: 3px solid var(--secondary);
+        }
+
+        .menu li i {
+            margin-right: 10px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .badge {
+            background-color: var(--secondary);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .user-info {
+            padding: 20px;
+            border-top: 1px solid #2a3b4c;
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            position: relative;
+            font-size: 20px;
+            color: var(--gray);
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 20px;
+            padding: 8px 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            padding: 5px;
+            width: 200px;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .card h3 i {
+            margin-right: 10px;
+            color: var(--secondary);
+        }
+
+        .rules-list {
+            list-style: none;
+        }
+
+        .rules-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+
+        .rules-list li:last-child {
+            border-bottom: none;
+        }
+
+        .rules-list li i {
+            margin-right: 10px;
+            color: var(--accent);
+        }
+
+        .phase-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .phase {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+
+        .phase h4 {
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .phase.phase1 {
+            border-left: 4px solid var(--secondary);
+        }
+
+        .phase.phase2 {
+            border-left: 4px solid var(--danger);
+        }
+
+        .progress-container {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .profit-progress {
+            background-color: var(--accent);
+            width: 65%;
+        }
+
+        .loss-progress {
+            background-color: var(--danger);
+            width: 35%;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            height: 200px;
+            position: relative;
+        }
+
+        .currency-pairs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .currency-pair {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .currency-pair:hover {
+            background: #e9ecef;
+        }
+
+        .currency-pair.active {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 400px;
+            max-width: 90%;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--primary);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .currency-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .currency-option {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .currency-option:hover {
+            background-color: #f5f7fa;
+        }
+
+        .currency-option.selected {
+            border-color: var(--secondary);
+            background-color: #eef6ff;
+        }
+
+        .withdraw-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        .withdraw-btn:hover {
+            background-color: #3a8eee;
+        }
+
+        .withdraw-btn:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .coming-soon {
+            background-color: #f8f9fa;
+            color: var(--gray);
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .coming-soon i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 30px;
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        .analytics-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .history-table th, .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .history-table tr:hover {
+            background-color: #f5f7fa;
+        }
+
+        .profit {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .loss {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            .mobile-menu-toggle {
+                display: block;
+            }
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            .analytics-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x" style="color: #4a9eff;"></i>
+            <h1>TMGM PropFarm</h1>
+        </div>
+        <ul class="menu">
+            <li class="active" data-page="dashboard"><i class="fas fa-home"></i> Dashboard</li>
+            <li data-page="analytics"><i class="fas fa-chart-bar"></i> Analytics</li>
+            <li data-page="history"><i class="fas fa-history"></i> Trading History</li>
+            <li data-page="withdraw"><i class="fas fa-wallet"></i> Withdraw Funds</li>
+            <li data-page="settings"><i class="fas fa-cog"></i> Settings</li>
+            <li data-page="support"><i class="fas fa-question-circle"></i> Help & Support</li>
+            <li data-page="promotions"><i class="fas fa-gift"></i> Promotions <span class="badge">New</span></li>
+            <li data-page="community"><i class="fas fa-users"></i> Community</li>
+            <li data-page="education"><i class="fas fa-book"></i> Education</li>
+        </ul>
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div>
+                <div style="font-weight: 600;">Trader Account</div>
+                <div style="font-size: 12px; color: #a0aec0;">Challenge Phase 1</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <button class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 id="page-title">Trader Dashboard</h2>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <div class="notification-badge">3</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div class="page-content active" id="dashboard">
+            <div class="dashboard-cards">
+                <!-- Trading Rules Card -->
+                <div class="card">
+                    <h3><i class="fas fa-list-alt"></i> Trading Rules</h3>
+                    <ul class="rules-list">
+                        <li><i class="fas fa-ban"></i> No multiple positions</li>
+                        <li><i class="fas fa-calendar-times"></i> No weekend trading</li>
+                        <li><i class="fas fa-clock"></i> No holding over weekend</li>
+                        <li><i class="fas fa-calendar-day"></i> Trading days: 5</li>
+                        <li><i class="fas fa-newspaper"></i> No news trading</li>
+                    </ul>
+                </div>
+
+                <!-- Profit/Loss Limits Card -->
+                <div class="card">
+                    <h3><i class="fas fa-chart-line"></i> Profit & Loss Limits</h3>
+                    <div class="phase-container">
+                        <div class="phase phase1">
+                            <h4>Phase 1</h4>
+                            <p>Profit Target: <strong>40%</strong></p>
+                            <p>Maximum Loss: <strong>20%</strong></p>
+                        </div>
+                        <div class="phase phase2">
+                            <h4>Phase 2</h4>
+                            <p>Profit Target: <strong>30%</strong></p>
+                            <p>Maximum Loss: <strong>10%</strong></p>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress profit-progress"></div>
+                        </div>
+                        <div class="progress-labels">
+                            <span>Profit Progress: 65%</span>
+                            <span>40% Target</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress loss-progress"></div>
+                        </div>
+                        <div class="progress-labels">
+                            <span>Loss Progress: 35%</span>
+                            <span>20% Limit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Performance Chart -->
+                <div class="card">
+                    <h3><i class="fas fa-chart-area"></i> Daily Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Account Status Card -->
+                <div class="card">
+                    <h3><i class="fas fa-user-check"></i> Account Status</h3>
+                    <ul class="rules-list">
+                        <li><i class="fas fa-check-circle" style="color: #27ae60;"></i> Account Verified</li>
+                        <li><i class="fas fa-check-circle" style="color: #27ae60;"></i> KYC Completed</li>
+                        <li><i class="fas fa-clock" style="color: #f39c12;"></i> Challenge: In Progress</li>
+                        <li><i class="fas fa-calendar-alt"></i> Next Evaluation: 14 days</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div class="card" style="margin-bottom: 30px;">
+                <h3><i class="fas fa-chart-bar"></i> Market Analytics</h3>
+                <div class="currency-pairs">
+                    <div class="currency-pair active">EUR/USD</div>
+                    <div class="currency-pair">GBP/USD</div>
+                    <div class="currency-pair">USD/JPY</div>
+                    <div class="currency-pair">AUD/USD</div>
+                    <div class="currency-pair">USD/CAD</div>
+                    <div class="currency-pair">BTC/USD</div>
+                    <div class="currency-pair">ETH/USD</div>
+                    <div class="currency-pair">XAU/USD</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="marketChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Current Price</div>
+                        <div class="stat-value">1.0876</div>
+                        <div class="stat-label">EUR/USD</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Today's Change</div>
+                        <div class="stat-value" style="color: var(--accent);">+0.42%</div>
+                        <div class="stat-label">Since Open</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Daily High</div>
+                        <div class="stat-value">1.0892</div>
+                        <div class="stat-label">Resistance</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Daily Low</div>
+                        <div class="stat-value">1.0851</div>
+                        <div class="stat-label">Support</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coming Soon Features -->
+            <div class="card">
+                <h3><i class="fas fa-rocket"></i> Upcoming Features</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h4>AI Trading Assistant</h4>
+                        <p>Advanced AI to help with trade analysis and decisions</p>
+                        <div class="badge" style="margin-top: 10px;">Coming Soon</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h4>Mobile App</h4>
+                        <p>Trade on the go with our dedicated mobile application</p>
+                        <div class="badge" style="margin-top: 10px;">In Development</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h4>Advanced Analytics</h4>
+                        <p>Deep insights into your trading performance</p>
+                        <div class="badge" style="margin-top: 10px;">Coming Soon</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h4>Trader Academy</h4>
+                        <p>Comprehensive trading education platform</p>
+                        <div class="badge" style="margin-top: 10px;">Q4 2023</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div class="page-content" id="analytics">
+            <div class="card">
+                <h3><i class="fas fa-chart-bar"></i> Advanced Analytics</h3>
+                <div class="analytics-content">
+                    <div>
+                        <div class="chart-container">
+                            <canvas id="advancedChart"></canvas>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">Win Rate</div>
+                                <div class="stat-value">68%</div>
+                                <div class="stat-label">Last 30 Days</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Avg. Profit</div>
+                                <div class="stat-value" style="color: var(--accent);">+2.4%</div>
+                                <div class="stat-label">Per Trade</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Total Trades</div>
+                                <div class="stat-value">142</div>
+                                <div class="stat-label">This Month</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Risk/Reward</div>
+                                <div class="stat-value">1:2.5</div>
+                                <div class="stat-label">Ratio</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4>Performance Metrics</h4>
+                        <div class="rules-list">
+                            <li><i class="fas fa-chart-line"></i> Sharpe Ratio: 1.8</li>
+                            <li><i class="fas fa-balance-scale"></i> Max Drawdown: 12%</li>
+                            <li><i class="fas fa-running"></i> Profit Factor: 2.1</li>
+                            <li><i class="fas fa-clock"></i> Avg. Holding Time: 4.2h</li>
+                        </div>
+                        <h4 style="margin-top: 20px;">Trade Distribution</h4>
+                        <div class="chart-container">
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading History Page -->
+        <div class="page-content" id="history">
+            <div class="card">
+                <h3><i class="fas fa-history"></i> Trading History</h3>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Symbol</th>
+                            <th>Type</th>
+                            <th>Volume</th>
+                            <th>Entry</th>
+                            <th>Exit</th>
+                            <th>P/L</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2023-10-15</td>
+                            <td>EUR/USD</td>
+                            <td>BUY</td>
+                            <td>0.5</td>
+                            <td>1.0550</td>
+                            <td>1.0620</td>
+                            <td class="profit">+$350</td>
+                        </tr>
+                        <tr>
+                            <td>2023-10-14</td>
+                            <td>GBP/USD</td>
+                            <td>SELL</td>
+                            <td>0.3</td>
+                            <td>1.2200</td>
+                            <td>1.2150</td>
+                            <td class="profit">+$150</td>
+                        </tr>
+                        <tr>
+                            <td>2023-10-13</td>
+                            <td>USD/JPY</td>
+                            <td>BUY</td>
+                            <td>0.4</td>
+                            <td>149.20</td>
+                            <td>148.80</td>
+                            <td class="loss">-$160</td>
+                        </tr>
+                        <tr>
+                            <td>2023-10-12</td>
+                            <td>XAU/USD</td>
+                            <td>BUY</td>
+                            <td>0.1</td>
+                            <td>1875.00</td>
+                            <td>1888.00</td>
+                            <td class="profit">+$130</td>
+                        </tr>
+                        <tr>
+                            <td>2023-10-11</td>
+                            <td>BTC/USD</td>
+                            <td>SELL</td>
+                            <td>0.05</td>
+                            <td>27450</td>
+                            <td>27200</td>
+                            <td class="profit">+$125</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Other Pages -->
+        <div class="page-content" id="settings">
+            <div class="card">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <div class="coming-soon">
+                    <i class="fas fa-tools"></i>
+                    <h4>Settings Panel Coming Soon</h4>
+                    <p>We're working on a comprehensive settings panel where you can customize your trading experience.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="support">
+            <div class="card">
+                <h3><i class="fas fa-question-circle"></i> Help & Support</h3>
+                <div class="coming-soon">
+                    <i class="fas fa-headset"></i>
+                    <h4>Support Center Coming Soon</h4>
+                    <p>Our dedicated support team will be available 24/7 to assist with any questions or issues.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="promotions">
+            <div class="card">
+                <h3><i class="fas fa-gift"></i> Promotions</h3>
+                <div class="coming-soon">
+                    <i class="fas fa-gifts"></i>
+                    <h4>Exciting Promotions Coming Soon</h4>
+                    <p>Stay tuned for exclusive promotions, bonuses, and trading competitions.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="community">
+            <div class="card">
+                <h3><i class="fas fa-users"></i> Community</h3>
+                <div class="coming-soon">
+                    <i class="fas fa-comments"></i>
+                    <h4>Trader Community Coming Soon</h4>
+                    <p>Connect with other traders, share strategies, and learn from the community.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="education">
+            <div class="card">
+                <h3><i class="fas fa-book"></i> Education</h3>
+                <div class="coming-soon">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h4>Trader Education Portal Coming Soon</h4>
+                    <p>Access comprehensive trading courses, webinars, and educational resources.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawal Modal -->
+    <div class="modal" id="withdrawalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Withdraw Funds</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <p>Select withdrawal currency:</p>
+            <div class="currency-options">
+                <div class="currency-option selected">USD ($)</div>
+                <div class="currency-option">NGN (₦)</div>
+                <div class="currency-option">JPY (¥)</div>
+                <div class="currency-option">EUR (€)</div>
+                <div class="currency-option">GBP (£)</div>
+                <div class="currency-option">CAD (C$)</div>
+            </div>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> Challenge not complete. You cannot withdraw funds until you complete the trading challenge.
+            </div>
+            <button class="withdraw-btn" disabled>Withdraw Funds</button>
+        </div>
+    </div>
+
+    <script>
+        // Navigation functionality
+        const menuItems = document.querySelectorAll('.menu li');
+        const pageContents = document.querySelectorAll('.page-content');
+        const pageTitle = document.getElementById('page-title');
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all menu items
+                menuItems.forEach(i => i.classList.remove('active'));
+                
+                // Add active class to clicked menu item
+                this.classList.add('active');
+                
+                // Hide all page contents
+                pageContents.forEach(content => content.classList.remove('active'));
+                
+                // Show the selected page content
+                const pageId = this.getAttribute('data-page');
+                document.getElementById(pageId).classList.add('active');
+                
+                // Update page title
+                const pageName = this.textContent.trim();
+                pageTitle.textContent = pageName;
+                
+                // Special handling for withdraw page
+                if (pageId === 'withdraw') {
+                    document.getElementById('withdrawalModal').style.display = 'flex';
+                    // Keep dashboard active in menu
+                    document.querySelector('.menu li[data-page="dashboard"]').classList.add('active');
+                    document.getElementById('dashboard').classList.add('active');
+                    pageTitle.textContent = 'Trader Dashboard';
+                }
+                
+                // Close mobile menu after selection
+                if (window.innerWidth <= 768) {
+                    document.querySelector('.sidebar').classList.remove('active');
+                }
+            });
+        });
+
+        // Toggle withdrawal modal
+        document.querySelectorAll('.menu li')[3].addEventListener('click', function() {
+            document.getElementById('withdrawalModal').style.display = 'flex';
+        });
+
+        // Close modal when clicking close button
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            document.getElementById('withdrawalModal').style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('withdrawalModal')) {
+                document.getElementById('withdrawalModal').style.display = 'none';
+            }
+        });
+
+        // Currency selection
+        const currencyOptions = document.querySelectorAll('.currency-option');
+        currencyOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                currencyOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        // Currency pairs selection
+        const currencyPairs = document.querySelectorAll('.currency-pair');
+        currencyPairs.forEach(pair => {
+            pair.addEventListener('click', function() {
+                currencyPairs.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                updateMarketChart();
+            });
+        });
+
+        // Performance Chart
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(performanceCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Account Growth',
+                    data: [100, 105, 103, 110, 115, 112, 120],
+                    borderColor: '#4a9eff',
+                    backgroundColor: 'rgba(74, 158, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Market Chart
+        const marketCtx = document.getElementById('marketChart').getContext('2d');
+        const marketChart = new Chart(marketCtx, {
+            type: 'line',
+            data: {
+                labels: ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+                datasets: [{
+                    label: 'Price',
+                    data: [1.0850, 1.0862, 1.0875, 1.0868, 1.0872, 1.0880, 1.0876, 1.0872],
+                    borderColor: '#27ae60',
+                    backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Advanced Analytics Chart
+        const advancedCtx = document.getElementById('advancedChart').getContext('2d');
+        const advancedChart = new Chart(advancedCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Profit/Loss',
+                    data: [1200, 1900, 1500, 2200],
+                    backgroundColor: [
+                        'rgba(74, 158, 255, 0.7)',
+                        'rgba(39, 174, 96, 0.7)',
+                        'rgba(74, 158, 255, 0.7)',
+                        'rgba(39, 174, 96, 0.7)'
+                    ],
+                    borderColor: [
+                        '#4a9eff',
+                        '#27ae60',
+                        '#4a9eff',
+                        '#27ae60'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Distribution Chart
+        const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+        const distributionChart = new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'XAU/USD', 'Others'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: [
+                        '#4a9eff',
+                        '#27ae60',
+                        '#e74c3c',
+                        '#f39c12',
+                        '#9b59b6'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Update market chart based on selected currency pair
+        function updateMarketChart() {
+            const pairs = {
+                'EUR/USD': [1.0850, 1.0862, 1.0875, 1.0868, 1.0872, 1.0880, 1.0876, 1.0872],
+                'GBP/USD': [1.2740, 1.2755, 1.2768, 1.2752, 1.2760, 1.2772, 1.2765, 1.2760],
+                'USD/JPY': [149.20, 149.35, 149.50, 149.42, 149.38, 149.55, 149.48, 149.45],
+                'AUD/USD': [0.6520, 0.6532, 0.6540, 0.6535, 0.6542, 0.6550, 0.6545, 0.6542],
+                'USD/CAD': [1.3580, 1.3572, 1.3565, 1.3570, 1.3568, 1.3560, 1.3565, 1.3568],
+                'BTC/USD': [34250, 34320, 34450, 34380, 34420, 34500, 34460, 34430],
+                'ETH/USD': [1850, 1862, 1875, 1868, 1872, 1880, 1876, 1872],
+                'XAU/USD': [1975, 1978, 1982, 1980, 1983, 1985, 1982, 1980]
+            };
+
+            const activePair = document.querySelector('.currency-pair.active').textContent;
+            marketChart.data.datasets[0].data = pairs[activePair];
+            marketChart.update();
+        }
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update performance chart with new random data
+            const lastValue = performanceChart.data.datasets[0].data[6];
+            const newValue = lastValue + (Math.random() * 4 - 2);
+            performanceChart.data.datasets[0].data.push(newValue);
+            performanceChart.data.labels.push('');
+            if (performanceChart.data.datasets[0].data.length > 10) {
+                performanceChart.data.datasets[0].data.shift();
+                performanceChart.data.labels.shift();
+            }
+            performanceChart.update();
+
+            // Update market chart with new random data
+            const marketLastValue = marketChart.data.datasets[0].data[7];
+            const marketNewValue = marketLastValue + (Math.random() * 0.002 - 0.001);
+            marketChart.data.datasets[0].data.push(marketNewValue);
+            marketChart.data.labels.push('');
+            if (marketChart.data.datasets[0].data.length > 10) {
+                marketChart.data.datasets[0].data.shift();
+                marketChart.data.labels.shift();
+            }
+            marketChart.update();
+        }, 5000);
+    </script>
+</body>
+</html>
